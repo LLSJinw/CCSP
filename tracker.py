@@ -11,24 +11,32 @@ if 'streak' not in st.session_state:
 if 'last_entry_date' not in st.session_state:
     st.session_state.last_entry_date = None
 
-# Daily study tips/suggestions rotation
-suggestions = [
-    "📘 Pete Zerger YouTube: Domain overview video (15–25 min)",
-    "📗 Official Guide: Read 1 subchapter (~30 min)",
-    "🧠 LearnZapp: Do 20 practice questions (~20 min)",
-    "📝 Write 3 key takeaways in your notes or flashcards (~15 min)",
-    "🎯 Quizlet Flashcards: Review top 20 terms (~15 min)",
-    "📖 NIST 800-145 summary (skim ~10 min)",
-    "🎥 Mike Chapple LinkedIn Learning: 1 topic segment (~25–30 min)"
+# Define milestone tracker (static for now)
+milestones = [
+    "✅ Domain 1 Complete",
+    "✅ Domain 2 Complete",
+    "✅ Domain 3 Complete",
+    "✅ Domain 4 Complete",
+    "✅ Domain 5 Complete",
+    "✅ Domain 6 Complete",
+    "🧠 Practice Exam 1 Done",
+    "🔁 Mid-Review Week",
+    "🧠 Practice Exam 2 Done",
+    "🎯 Final Review Week"
 ]
 
-# Layout
-st.title("📘 CCSP Daily Study Tracker")
-st.markdown("Track your CCSP exam prep with a daily mission (max 1.5 hrs/day). Complete all 3 inputs to build your study streak.")
+# Task checklist items
+task_items = [
+    ("Read Official Guide (1 section)", True),
+    ("Complete 15–25 LearnZapp questions", True),
+    ("Watch 1 topic video (Pete Zerger / Mike Chapple)", False),
+    ("Review 15 Quizlet flashcards", False),
+    ("Skim short section of NIST doc", False),
+    ("Write 3 takeaways in Notion or journal", False)
+]
 
-# Suggestion of the day
-st.subheader("🎯 Today's Study Suggestion")
-st.info(random.choice(suggestions))
+st.title("📘 CCSP Daily Study Tracker")
+st.markdown("Track your CCSP exam prep with daily 3-task missions (at least 1 core task ⭐). Build your streak and hit milestones.")
 
 # Input Section
 st.subheader("📝 Log Today’s Study Progress")
@@ -46,17 +54,35 @@ study_domain = st.selectbox("Domain Studied", [
     "Review / Practice Exam",
     "Other"
 ])
-study_notes = st.text_area("Notes (e.g., chapters read, practice tests done, key points)")
 
-# Semi-strict enforcement
+# Task checkboxes
+st.markdown("**Select today's completed tasks (at least 3, including 1 ⭐ core):**")
+completed_tasks = []
+core_count = 0
+for task, is_core in task_items:
+    checked = st.checkbox(f"{'⭐' if is_core else '•'} {task}")
+    if checked:
+        completed_tasks.append(task)
+        if is_core:
+            core_count += 1
+
+# Optional reflection
+study_notes = st.text_area("Reflection or notes (optional)")
+
+# Enforce rules
 if st.button("Add Entry"):
-    if study_domain.strip() == "" or study_notes.strip() == "":
-        st.warning("⛔ Please fill in all 3 fields: Duration, Domain, and Notes.")
+    if len(completed_tasks) < 3:
+        st.warning("⛔ Please complete at least 3 tasks.")
+    elif core_count < 1:
+        st.warning("⭐ You must complete at least 1 core task (marked with a ⭐).")
+    elif study_domain.strip() == "":
+        st.warning("⛔ Please select a domain.")
     else:
         st.session_state.study_log.append({
             "Date": study_date,
             "Duration": study_duration,
             "Domain": study_domain,
+            "Tasks": ", ".join(completed_tasks),
             "Notes": study_notes
         })
         # Update streak
@@ -83,7 +109,12 @@ if st.session_state.study_log:
 
     st.success(f"🔥 Current Streak: {st.session_state.streak} day(s) in a row!")
 else:
-    st.info("No study logs yet. Complete your first 3 inputs above to start your streak.")
+    st.info("No study logs yet. Complete your first 3-task mission above to start your streak.")
+
+# Milestone Checklist (Static for now)
+st.subheader("📅 Milestone Tracker")
+for milestone in milestones:
+    st.markdown(f"- {milestone}")
 
 # Optional: Export Log
 with st.expander("📁 Export Log"):
